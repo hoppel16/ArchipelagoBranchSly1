@@ -16,6 +16,7 @@ from worlds.LauncherComponents import (
     launch_subprocess,
     icon_paths,
 )
+from Options import OptionError
 
 def run_client():
     from .Sly1Client import launch_client
@@ -88,11 +89,31 @@ class Sly1World(World):
         generate_minigame_locations(self, self.options.MinigameCaches.value)
 
     def create_items(self):
-        self.multiworld.itempool += create_itempool(self)
+        itempool = create_itempool(self)
+        self.multiworld.itempool.extend(itempool)
+        location_count = len(self.multiworld.get_unfilled_locations(self.player))
+        item_count = len(itempool)
         for event, item in event_item_pairs.items():
             event_item = Sly1Item(item, ItemClassification.progression_skip_balancing, None, self.player)
             self.multiworld.get_location(event, self.player).place_locked_item(event_item)
+        if location_count - item_count >= 0:
+            filler = [self.create_filler() for _ in range(location_count - item_count)]
+            self.multiworld.itempool.extend(filler)
+        else:
+            self.handle_not_enough_locations(item_count - location_count)
 
+    def handle_not_enough_locations(self, count):
+        """Check the available location and items counts, raise OptionErrors to warn the player of too few locations"""
+        option_list: list[str] = []
+        if self.options.LocationCluesanityBundleSize == 0:
+            option_list.append("Location Cluesanity Bundle Size")
+        if self.options.MinigameCaches == 0:
+            option_list.append("Minigame Caches")
+        if not option_list:
+            option_list: str = "dunno"  # ¯\_(''/)_/¯
+        message = f"Not enough location options enabled! {count} items have nowhere to be placed."
+        message += f"Consider adjusting some of the following options: {option_list}"
+        raise OptionError(message)
     set_rules = set_rules
 
     def create_item(self, name: str) -> Item:
