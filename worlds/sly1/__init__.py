@@ -1,6 +1,6 @@
 import random
 import logging
-from typing import Dict
+from typing import Dict, Any, Mapping
 from BaseClasses import MultiWorld, Item, ItemClassification, Tutorial
 from worlds.AutoWorld import World, CollectionState, WebWorld
 from .Items import item_table, create_itempool, create_item, event_item_pairs, sly_episodes
@@ -22,7 +22,7 @@ def run_client():
     from .Sly1Client import launch_client
     launch_subprocess(launch_client, name="Sly1Client")
 
-#icon_paths["sly1_ico"] = f"ap:{__name__}/icon.png"
+# icon_paths["sly1_ico"] = f"ap:{__name__}/icon.png"
 components.append(
     Component("Sly 1 Client", func=run_client, component_type=Type.CLIENT)
 )
@@ -52,10 +52,47 @@ class Sly1World(World):
     options = Sly1Options
     web = Sly1Web()
 
+    # this is how we tell the Universal Tracker we want to use re_gen_passthrough
+    @staticmethod
+    def interpret_slot_data(slot_data: Dict[str, Any]) -> Dict[str, Any]:
+        return slot_data
+
+    # and this is how we tell Universal Tracker we don't need the yaml
+    ut_can_gen_without_yaml = True
+
     def __init__(self, multiworld: MultiWorld, player: int):
         super().__init__(multiworld, player)
 
-    def generate_early(self):
+    def generate_early(self) -> None:
+        # implement .yaml-less Universal Tracker support
+        if hasattr(self.multiworld, "generation_is_fake"):
+            if hasattr(self.multiworld, "re_gen_passthrough"):
+                # I'm doing getattr purely so pylance stops being mad at me
+                re_gen_passthrough = getattr(self.multiworld, "re_gen_passthrough")
+
+                if "Sly Cooper and the Thievius Raccoonus" in re_gen_passthrough:
+                    slot_data = re_gen_passthrough["Sly Cooper and the Thievius Raccoonus"]
+                    self.options.UnlockClockwerk.value = slot_data["UnlockClockwerk"]
+                    self.options.FastClockwerk.value = slot_data["FastClockwerk"]
+                    self.options.RequiredBosses.value = slot_data["RequiredBosses"]
+                    self.options.MaxPages.value = slot_data["MaxPages"]
+                    self.options.RequiredPages.value = slot_data["RequiredPages"]
+                    self.options.StartingEpisode.value = slot_data["StartingEpisode"]
+                    self.options.IncludeHourglasses.value = slot_data["IncludeHourglasses"]
+                    self.options.HourglassesRequireRoll.value = slot_data["HourglassesRequireRoll"]
+                    self.options.AvoidEarlyBK.value = slot_data["AvoidEarlyBK"]
+                    self.options.ExcludeMinigames.value = slot_data["ExcludeMinigames"]
+                    self.options.MinigameCaches.value = slot_data["MinigameCaches"]
+                    self.options.LocationCluesanityBundleSize.value = slot_data["LocationCluesanityBundleSize"]
+                    self.options.ItemCluesanityBundleSize.value = slot_data["ItemCluesanityBundleSize"]
+                    self.options.CutsceneSkip.value = slot_data["CutsceneSkip"]
+                    self.options.TrapChance.value = slot_data["TrapChance"]
+                    self.options.IcePhysicsTrapWeight.value = slot_data["IcePhysicsTrapWeight"]
+                    self.options.SpeedChangeTrapWeight.value = slot_data["SpeedChangeTrapWeight"]
+                    self.options.InvisibilityTrapWeight.value = slot_data["InvisibilityTrapWeight"]
+                    self.options.BallTrapWeight.value = slot_data["BallTrapWeight"]
+            return
+
         starting_episode = EpisodeType(self.options.StartingEpisode)
         starting_episode_long = episode_type_to_name[starting_episode]
         starting_episode_short = episode_type_to_shortened_name[starting_episode]
@@ -118,27 +155,32 @@ class Sly1World(World):
 
     def create_item(self, name: str) -> Item:
         return create_item(self, name)
-    
-    def fill_slot_data(self) -> Dict[str, object]:
-        slot_data: Dict[str, object] = {
-            "options": {
-                "UnlockClockwerk": self.options.UnlockClockwerk.value,
-                "RequiredBosses": self.options.RequiredBosses.value,
-                "MaxPages": self.options.MaxPages.value,
-                "RequiredPages": self.options.RequiredPages.value,
-                "FastClockwerk": self.options.FastClockwerk.value,
-                "StartingEpisode": episode_type_to_name[EpisodeType(self.options.StartingEpisode)],
-                "IncludeHourglasses": self.options.IncludeHourglasses.value,
-                "HourglassesRequireRoll": self.options.HourglassesRequireRoll.value,
-                "AvoidEarlyBK": self.options.AvoidEarlyBK.value,
-                "LocationCluesanityBundleSize": self.options.LocationCluesanityBundleSize.value,
-                "ItemCluesanityBundleSize": self.options.ItemCluesanityBundleSize.value,
-                "CutsceneSkip": self.options.CutsceneSkip.value
-            },
-            "Seed": self.multiworld.seed_name,  # to verify the server's multiworld
-            "Slot": self.multiworld.player_name[self.player],  # to connect to server
-            "TotalLocations": get_total_locations(self)
-        }
+
+    def get_options_as_dict(self) -> Dict[str, Any]:
+        return self.options.as_dict(
+            "UnlockClockwerk",
+            "RequiredBosses",
+            "MaxPages",
+            "RequiredPages",
+            "FastClockwerk",
+            "StartingEpisode",
+            "IncludeHourglasses",
+            "HourglassesRequireRoll",
+            "AvoidEarlyBK",
+            "LocationCluesanityBundleSize",
+            "ItemCluesanityBundleSize",
+            "CutsceneSkip",
+            "ExcludeMinigames",
+            "MinigameCaches",
+            "TrapChance",
+            "IcePhysicsTrapWeight",
+            "SpeedChangeTrapWeight",
+            "InvisibilityTrapWeight",
+            "BallTrapWeight",
+        )
+
+    def fill_slot_data(self) -> Mapping[str, object]:
+        slot_data = self.get_options_as_dict()
 
         return slot_data
 
