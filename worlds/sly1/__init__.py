@@ -22,9 +22,9 @@ def run_client():
     from .Sly1Client import launch_client
     launch_subprocess(launch_client, name="Sly1Client")
 
-icon_paths["sly1_ico"] = f"ap:{__name__}/icon.png"
+#icon_paths["sly1_ico"] = f"ap:{__name__}/icon.png"
 components.append(
-    Component("Sly 1 Client", func=run_client, component_type=Type.CLIENT, icon="sly1_ico")
+    Component("Sly 1 Client", func=run_client, component_type=Type.CLIENT)
 )
 
 class Sly1Web(WebWorld):
