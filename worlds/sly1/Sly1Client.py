@@ -8,12 +8,25 @@ import os
 launcher_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 os.chdir(launcher_dir)
 
-from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, logger, server_loop, gui_enabled
+from CommonClient import get_base_parser, logger, server_loop, gui_enabled
 import Utils
 
 from .Sly1Interface import Sly1Interface, Sly1Episode
 from .Callbacks import init, update
 from .data.Constants import LEVELS, MOVES
+
+# Load Universal Tracker
+tracker_loaded: bool = False
+try:
+    from worlds.tracker.TrackerClient import (
+        TrackerCommandProcessor as ClientCommandProcessor,
+        TrackerGameContext as CommonContext,
+        UT_VERSION
+    )
+
+    tracker_loaded = True
+except ImportError:
+    from CommonClient import ClientCommandProcessor, CommonContext
 
 class Sly1CommandProcessor(ClientCommandProcessor):
     def _cmd_vaults(self):
@@ -87,7 +100,22 @@ class Sly1Context(CommonContext):
 
     def __init__(self, server_address, password):
         super().__init__(server_address, password)
+        self.version = [0,3,3]
         self.game_interface = Sly1Interface(logger)
+
+    def run_generator(self):
+        if tracker_loaded:
+            super().run_generator()
+
+    def make_gui(self):
+        ui = super().make_gui()
+        ui.base_title = f"Sly 1 Client v{'.'.join([str(i) for i in self.version])}"
+        if tracker_loaded:
+            ui.base_title += f" | Universal Tracker {UT_VERSION}"
+
+        # AP version is added behind this automatically
+        ui.base_title += " | Archipelago"
+        return ui
 
     async def server_auth(self, password_requested: bool = False) -> None:
         if password_requested and not self.password:
@@ -96,6 +124,7 @@ class Sly1Context(CommonContext):
         await self.send_connect()
 
     def on_package(self, cmd: str, args: dict):
+        super().on_package(cmd, args)
         if cmd == "Connected":
             self.slot_data = args["slot_data"]
             self.current_scene_key = f"sly1_current_scene_T{self.team}_{self.slot}"
@@ -193,6 +222,11 @@ def launch_client():
 
         logger.info("Connecting to server...")
         ctx.server_task = asyncio.create_task(server_loop(ctx), name="Server Loop")
+
+        if tracker_loaded:
+            ctx.run_generator()
+            ctx.tags.remove("Tracker")
+
         if gui_enabled:
             ctx.run_gui()
         ctx.run_cli()
