@@ -17,9 +17,9 @@ from worlds.LauncherComponents import (
     icon_paths,
 )
 from Options import OptionError
+from worlds.sly1.Sly1Client import launch_client
 
 def run_client():
-    from worlds.sly1.Sly1Client import launch_client
     launch_subprocess(launch_client, name="Sly1Client")
 
 #icon_paths["sly1_ico"] = f"ap:{__name__}/icon.png"

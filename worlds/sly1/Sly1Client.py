@@ -4,6 +4,8 @@ import multiprocessing
 import traceback
 import os
 
+from worlds.sly1.Sly1Interface import Sly1Episode, Sly1Interface
+
 # Move up two directories from the client script location
 launcher_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 os.chdir(launcher_dir)
@@ -11,7 +13,6 @@ os.chdir(launcher_dir)
 from CommonClient import get_base_parser, logger, server_loop, gui_enabled
 import Utils
 
-from worlds.sly1.Sly1Interface import Sly1Interface, Sly1Episode
 from worlds.sly1.Callbacks import init, update
 from worlds.sly1.data.Constants import LEVELS, MOVES
 
