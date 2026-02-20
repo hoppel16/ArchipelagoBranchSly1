@@ -6,9 +6,9 @@ import asyncio
 import random
 import os
 
-from .pcsx2_interface.pine import Pine
-from .data.Constants import ADDRESSES, LEVELS
-from .Locations import bottle_amounts, minigame_locations
+from worlds.sly1.pcsx2_interface.pine import Pine
+from worlds.sly1.data.Constants import ADDRESSES, LEVELS
+from worlds.sly1.Locations import bottle_amounts, minigame_locations
 
 class Sly1Episode(IntEnum):
     Paris = 0
@@ -141,13 +141,12 @@ class Sly1Interface(GameInterface):
     def skip_cutscene(self, ctx: 'Sly1Context') -> None:
         if ctx.slot_data is None:
             return
-        options = ctx.slot_data.get("options", {})
-        if self.in_cutscene() and options.get("CutsceneSkip", 1) == 1:
+        if self.in_cutscene() and ctx.slot_data.get("CutsceneSkip", 1) == 1:
             cutscene_pointer = self._read32(self.addresses["cutscene pointer"])
             self._write32(cutscene_pointer + 744, 0)
-        if self.in_call() and options.get("CutsceneSkip", 1) == 1:
+        if self.in_call() and ctx.slot_data.get("CutsceneSkip", 1) == 1:
             self._write32(self.addresses["binocucom"], 0)
-        if self.in_fmv() and options.get("CutsceneSkip", 1) == 1:
+        if self.in_fmv() and ctx.slot_data.get("CutsceneSkip", 1) == 1:
             self._write32(self.addresses["FMV skip"], 0)
         if self.in_fmv() and self.get_button_press() == 2:
             self._write32(self.addresses["FMV skip"], 0)
@@ -214,8 +213,7 @@ class Sly1Interface(GameInterface):
     def write_names(self, ctx: 'Sly1Context') -> None:
         addresses = self.addresses["name pointers"]
         hub_addresses = self.addresses["hub name pointers"]
-        options = ctx.slot_data.get("options", {})
-        clue_bundles = options.get("ItemCluesanityBundleSize", 0)
+        clue_bundles = ctx.slot_data.get("ItemCluesanityBundleSize", 0)
 
         if self._read32(0x247B98) != 0x25EA00:
             return

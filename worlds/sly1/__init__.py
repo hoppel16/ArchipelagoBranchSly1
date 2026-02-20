@@ -3,12 +3,12 @@ import logging
 from typing import Dict, Any, Mapping
 from BaseClasses import MultiWorld, Item, ItemClassification, Tutorial
 from worlds.AutoWorld import World, CollectionState, WebWorld
-from .Items import item_table, create_itempool, create_item, event_item_pairs, sly_episodes
-from .Locations import get_location_names, get_total_locations, did_avoid_early_bk, generate_bottle_locations, generate_minigame_locations
-from .Options import Sly1Options
-from .Regions import create_regions
-from .Types import Sly1Item, EpisodeType, episode_type_to_name, episode_type_to_shortened_name
-from .Rules import set_rules
+from worlds.sly1.Items import item_table, create_itempool, create_item, event_item_pairs, sly_episodes
+from worlds.sly1.Locations import get_location_names, get_total_locations, did_avoid_early_bk, generate_bottle_locations, generate_minigame_locations
+from worlds.sly1.Options import Sly1Options
+from worlds.sly1.Regions import create_regions
+from worlds.sly1.Types import Sly1Item, EpisodeType, episode_type_to_name, episode_type_to_shortened_name
+from worlds.sly1.Rules import set_rules
 from worlds.LauncherComponents import (
     Component,
     Type,
@@ -19,10 +19,10 @@ from worlds.LauncherComponents import (
 from Options import OptionError
 
 def run_client():
-    from .Sly1Client import launch_client
+    from worlds.sly1.Sly1Client import launch_client
     launch_subprocess(launch_client, name="Sly1Client")
 
-# icon_paths["sly1_ico"] = f"ap:{__name__}/icon.png"
+#icon_paths["sly1_ico"] = f"ap:{__name__}/icon.png"
 components.append(
     Component("Sly 1 Client", func=run_client, component_type=Type.CLIENT)
 )
@@ -179,7 +179,7 @@ class Sly1World(World):
             "BallTrapWeight",
         )
 
-    def fill_slot_data(self) -> Mapping[str, object]:
+    def fill_slot_data(self) ->Mapping[str, object]:
         slot_data = self.get_options_as_dict()
 
         return slot_data

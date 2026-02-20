@@ -1,9 +1,9 @@
-from .Types import LocData, EpisodeType, LevelData, Sly1Location
+from worlds.sly1.Types import LocData, EpisodeType, LevelData, Sly1Location
 from typing import Dict, TYPE_CHECKING
 import logging
 
 if TYPE_CHECKING:
-    from . import Sly1World
+    from worlds.sly1 import Sly1World
 
 def did_include_hourglasses(world: "Sly1World") -> bool:
     return bool(world.options.IncludeHourglasses)

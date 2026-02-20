@@ -11,9 +11,9 @@ os.chdir(launcher_dir)
 from CommonClient import get_base_parser, logger, server_loop, gui_enabled
 import Utils
 
-from .Sly1Interface import Sly1Interface, Sly1Episode
-from .Callbacks import init, update
-from .data.Constants import LEVELS, MOVES
+from worlds.sly1.Sly1Interface import Sly1Interface, Sly1Episode
+from worlds.sly1.Callbacks import init, update
+from worlds.sly1.data.Constants import LEVELS, MOVES
 
 # Load Universal Tracker
 tracker_loaded: bool = False
@@ -34,7 +34,7 @@ class Sly1CommandProcessor(ClientCommandProcessor):
         if isinstance(self.ctx, Sly1Context):
             if self.ctx.slot_data is None:
                 logger.info("Connect to a slot first!")
-            elif self.ctx.slot_data["options"]["ItemCluesanityBundleSize"] == 0:
+            elif self.ctx.slot_data.get("ItemCluesanityBundleSize") == 0:
                 logger.info("Just do it like in vanilla, dummy!")
             elif not self.ctx.openable_vaults:
                 logger.info("No vaults available to open")
@@ -46,10 +46,10 @@ class Sly1CommandProcessor(ClientCommandProcessor):
         if isinstance(self.ctx, Sly1Context):
             if self.ctx.slot_data is None:
                 logger.info("Connect to a slot first!")
-            elif self.ctx.slot_data["options"].get("UnlockClockwerk", 1) == 1:
-                logger.info(f"{self.ctx.bosses_beaten} bosses out of {self.ctx.slot_data["options"]["RequiredBosses"]}")
+            elif self.ctx.slot_data.get("UnlockClockwerk", 1) == 1:
+                logger.info(f"{self.ctx.bosses_beaten} bosses out of {self.ctx.slot_data.get("RequiredBosses")}")
             else:
-                logger.info(f"{self.ctx.goal_pages} pages out of {self.ctx.slot_data["options"]["RequiredPages"]}")
+                logger.info(f"{self.ctx.goal_pages} pages out of {self.ctx.slot_data.get("RequiredPages")}")
 
 class Sly1Context(CommonContext):
     command_processor = Sly1CommandProcessor

@@ -7,18 +7,18 @@ import os
 from NetUtils import ClientStatus
 from typing import Optional
 
-from .Sly1Interface import Sly1Episode, Sly1Interface
-from .pcsx2_interface.pine import Pine
-from .data.Constants import ADDRESSES, LEVELS, BOSSES, MOVES, MOVE_NAMES
-from .Locations import location_table, minigame_locations, bottle_amounts
-from .Items import from_id, bottles
+from worlds.sly1.Sly1Interface import Sly1Episode, Sly1Interface
+from worlds.sly1.pcsx2_interface.pine import Pine
+from worlds.sly1.data.Constants import ADDRESSES, LEVELS, BOSSES, MOVES, MOVE_NAMES
+from worlds.sly1.Locations import location_table, minigame_locations, bottle_amounts
+from worlds.sly1.Items import from_id, bottles
 import logging
 import Utils
 
 SAVE_FILE = "sly1_item_progress.json"
 
 if TYPE_CHECKING:
-    from .Sly1Client import Sly1Context
+    from worlds.sly1.Sly1Client import Sly1Context
 
 async def update(ctx: 'Sly1Context', ap_connected: bool) -> None:
     """Called continuously"""
@@ -102,10 +102,9 @@ def check_hubs(ctx: 'Sly1Context') -> None:
 def check_bottles(ctx: 'Sly1Context') -> None:
     if ctx.slot_data is None:
         return
-    options = ctx.slot_data.get("options", {})
-    bundle_size = options.get("ItemCluesanityBundleSize")
+    bundle_size = ctx.slot_data.get("ItemCluesanityBundleSize")
     if bundle_size is None:
-        bundle_size = options.get("CluesanityBundleSize")
+        bundle_size = ctx.slot_data.get("CluesanityBundleSize")
     if bundle_size is None or bundle_size == 0:
         return
     bottle_addresses = ADDRESSES["SCUS-97198"]["bottle addresses"]
@@ -130,20 +129,19 @@ def check_bottles(ctx: 'Sly1Context') -> None:
 def check_bosses(ctx: 'Sly1Context') -> None:
     if ctx.slot_data is None:
         return
-    options = ctx.slot_data.get("options", {})
-    required_bosses = options.get("RequiredBosses", 4)
-    if options.get("UnlockClockwerk", 1) == 1:
+    required_bosses = ctx.slot_data.get("RequiredBosses", 4)
+    if ctx.slot_data.get("UnlockClockwerk", 1) == 1:
         if ctx.bosses_beaten >= required_bosses:
             ctx.game_interface._write32(ADDRESSES["SCUS-97198"]["fits progress"], 53)
-            if options.get("FastClockwerk", 0) == 1:
+            if ctx.slot_data.get("FastClockwerk", 0) == 1:
                 ctx.game_interface._write32(0x27DB6C, 1)
         elif ctx.game_interface._read32(ADDRESSES["SCUS-97198"]["fits progress"]) > 21:
             ctx.game_interface._write32(ADDRESSES["SCUS-97198"]["fits progress"], 21)
 
     else:
-        if ctx.goal_pages >= ctx.slot_data["options"]["RequiredPages"]:
+        if ctx.goal_pages >= ctx.slot_data.get("RequiredPages"):
             ctx.game_interface._write32(ADDRESSES["SCUS-97198"]["fits progress"], 53)
-            if ctx.slot_data["options"].get("FastClockwerk", 0) == 1:
+            if ctx.slot_data.get("FastClockwerk", 0) == 1:
                 ctx.game_interface._write32(0x27DB6C, 1)
         elif ctx.game_interface._read32(ADDRESSES["SCUS-97198"]["fits progress"]) > 21:
             ctx.game_interface._write32(ADDRESSES["SCUS-97198"]["fits progress"], 21)
@@ -192,10 +190,9 @@ async def handle_checks(ctx: 'Sly1Context') -> None:
                         ctx.locations_checked.add(location_code)
 
     #Clue Bottles
-    options = ctx.slot_data.get("options", {})
-    bottle_n = options.get("LocationCluesanityBundleSize", 0)
+    bottle_n = ctx.slot_data.get("LocationCluesanityBundleSize", 0)
     if bottle_n is None:
-        bottle_n = options.get("CluesanityBundleSize", 0)
+        bottle_n = ctx.slot_data.get("CluesanityBundleSize", 0)
 
     if bottle_n != 0:
         level_addresses = ADDRESSES["SCUS-97198"]["levels"]
