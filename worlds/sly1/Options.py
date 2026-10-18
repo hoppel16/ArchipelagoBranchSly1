@@ -1,14 +1,6 @@
-from typing import List, Dict, Any
 from dataclasses import dataclass
 from worlds.AutoWorld import PerGameCommonOptions
-from Options import Choice, OptionGroup, Toggle, OptionSet, Range
-
-def create_option_groups() -> List[OptionGroup]:
-    option_group_list: List[OptionGroup] = []
-    for name, options in sly1_option_groups.items():
-        option_group_list.append(OptionGroup(name=name, options=options))
-
-    return option_group_list
+from Options import Choice, OptionGroup, Toggle, OptionSet, Range, StartInventoryPool
 
 class UnlockClockwerk(Choice):
     """
@@ -221,6 +213,7 @@ class EnableTricks(OptionSet):
 
 @dataclass
 class Sly1Options(PerGameCommonOptions):
+    start_inventory_from_pool:      StartInventoryPool
     UnlockClockwerk:                UnlockClockwerk
     FastClockwerk:                  FastClockwerk
     RequiredBosses:                 RequiredBosses
@@ -242,15 +235,32 @@ class Sly1Options(PerGameCommonOptions):
     InvisibilityTrapWeight:         InvisibilityTrapWeight
     BallTrapWeight:                 BallTrapWeight
 
-sly1_option_groups: Dict[str, List[Any]] = {
-    "General Options": [UnlockClockwerk, FastClockwerk,
-                         RequiredBosses, MaxPages,
-                         RequiredPages, StartingEpisode,
-                         IncludeHourglasses, HourglassesRequireRoll,
-                         EnableTricks, CutsceneSkip],
-    "Minigame Options": [ExcludeMinigames, MinigameCaches],
-    "Cluesanity Options": [LocationCluesanityBundleSize, ItemCluesanityBundleSize],
-    "Trap Options": [TrapChance, IcePhysicsTrapWeight,
-                     SpeedChangeTrapWeight, InvisibilityTrapWeight,
-                     BallTrapWeight]
-}
+sly1_option_groups = [
+    OptionGroup("General Options",[
+        UnlockClockwerk,
+        FastClockwerk,
+        RequiredBosses,
+        MaxPages,
+        RequiredPages,
+        StartingEpisode,
+        IncludeHourglasses,
+        HourglassesRequireRoll,
+        EnableTricks,
+        CutsceneSkip
+    ]),
+    OptionGroup("Minigame Options",[
+        ExcludeMinigames,
+        MinigameCaches
+    ]),
+    OptionGroup("Cluesanity Options",[
+        LocationCluesanityBundleSize,
+        ItemCluesanityBundleSize
+    ]),
+    OptionGroup("Trap Options",[
+        TrapChance,
+        IcePhysicsTrapWeight,
+        SpeedChangeTrapWeight,
+        InvisibilityTrapWeight,
+        BallTrapWeight
+    ])
+]

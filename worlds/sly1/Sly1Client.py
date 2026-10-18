@@ -101,7 +101,7 @@ class Sly1Context(CommonContext):
 
     def __init__(self, server_address, password):
         super().__init__(server_address, password)
-        self.version = [0,3,5]
+        self.version = [0,3,6]
         self.game_interface = Sly1Interface(logger)
         self.names_dirty = True
 

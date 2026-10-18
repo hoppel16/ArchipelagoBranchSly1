@@ -9,7 +9,7 @@ from worlds.sly1.Locations import (get_location_names, get_total_locations,
                                    did_avoid_early_bk, generate_bottle_locations,
                                    generate_minigame_locations, generate_key_caches,
                                    loc_to_ep, all_minigames, lvl_lookup)
-from worlds.sly1.Options import Sly1Options
+from worlds.sly1.Options import Sly1Options, sly1_option_groups
 from worlds.sly1.Regions import create_regions
 from worlds.sly1.Types import Sly1Item, EpisodeType, episode_type_to_unlock
 from worlds.sly1.Rules import set_rules
@@ -18,7 +18,6 @@ from worlds.LauncherComponents import (
     Type,
     components,
     launch_subprocess,
-    icon_paths,
 )
 from Options import OptionError
 import settings
@@ -113,6 +112,7 @@ class Sly1Web(WebWorld):
         "setup/en",
         ["Nep"]
     )]
+    option_groups = sly1_option_groups
 
 class Sly1Settings(settings.Group):
     class AutoFillLocations(settings.Bool):
@@ -132,7 +132,7 @@ class Sly1World(World):
     item_name_to_id = {name: data.ap_code for name, data in item_table.items()}
     location_name_to_id = get_location_names()
     options_dataclass = Sly1Options
-    options = Sly1Options
+    options: Sly1Options
     web = Sly1Web()
     settings: ClassVar[Sly1Settings]
 
@@ -155,41 +155,40 @@ class Sly1World(World):
     def generate_early(self) -> None:
         # implement .yaml-less Universal Tracker support
         if getattr(self.multiworld, "generation_is_fake", False):
-            if hasattr(self.multiworld, "re_gen_passthrough"):
-                re_gen_passthrough = getattr(self.multiworld, "re_gen_passthrough")
+            re_gen_passthrough = getattr(self.multiworld, "re_gen_passthrough", {})
 
-                if "Sly Cooper and the Thievius Raccoonus" in re_gen_passthrough:
-                    slot_data = re_gen_passthrough["Sly Cooper and the Thievius Raccoonus"]
-                    self.options.UnlockClockwerk.value = slot_data["UnlockClockwerk"]
-                    self.options.FastClockwerk.value = slot_data["FastClockwerk"]
-                    self.options.RequiredBosses.value = slot_data["RequiredBosses"]
-                    self.options.MaxPages.value = slot_data["MaxPages"]
-                    self.options.RequiredPages.value = slot_data["RequiredPages"]
-                    self.options.StartingEpisode.value = slot_data["StartingEpisode"]
-                    self.options.IncludeHourglasses.value = slot_data["IncludeHourglasses"]
-                    self.options.HourglassesRequireRoll.value = slot_data["HourglassesRequireRoll"]
-                    self.options.EnableTricks.value = slot_data["EnableTricks"]
-                    self.options.AvoidEarlyBK.value = slot_data["AvoidEarlyBK"]
-                    self.options.ExcludeMinigames.value = slot_data["ExcludeMinigames"]
-                    self.options.MinigameCaches.value = slot_data["MinigameCaches"]
-                    self.options.LocationCluesanityBundleSize.value = slot_data["LocationCluesanityBundleSize"]
-                    self.options.ItemCluesanityBundleSize.value = slot_data["ItemCluesanityBundleSize"]
-                    self.options.CutsceneSkip.value = slot_data["CutsceneSkip"]
-                    self.options.TrapChance.value = slot_data["TrapChance"]
-                    self.options.IcePhysicsTrapWeight.value = slot_data["IcePhysicsTrapWeight"]
-                    self.options.SpeedChangeTrapWeight.value = slot_data["SpeedChangeTrapWeight"]
-                    self.options.InvisibilityTrapWeight.value = slot_data["InvisibilityTrapWeight"]
-                    self.options.BallTrapWeight.value = slot_data["BallTrapWeight"]
+            if "Sly Cooper and the Thievius Raccoonus" in re_gen_passthrough:
+                slot_data = re_gen_passthrough["Sly Cooper and the Thievius Raccoonus"]
+                self.options.UnlockClockwerk.value = slot_data["UnlockClockwerk"]
+                self.options.FastClockwerk.value = slot_data["FastClockwerk"]
+                self.options.RequiredBosses.value = slot_data["RequiredBosses"]
+                self.options.MaxPages.value = slot_data["MaxPages"]
+                self.options.RequiredPages.value = slot_data["RequiredPages"]
+                self.options.StartingEpisode.value = slot_data["StartingEpisode"]
+                self.options.IncludeHourglasses.value = slot_data["IncludeHourglasses"]
+                self.options.HourglassesRequireRoll.value = slot_data["HourglassesRequireRoll"]
+                self.options.EnableTricks.value = slot_data["EnableTricks"]
+                self.options.AvoidEarlyBK.value = slot_data["AvoidEarlyBK"]
+                self.options.ExcludeMinigames.value = slot_data["ExcludeMinigames"]
+                self.options.MinigameCaches.value = slot_data["MinigameCaches"]
+                self.options.LocationCluesanityBundleSize.value = slot_data["LocationCluesanityBundleSize"]
+                self.options.ItemCluesanityBundleSize.value = slot_data["ItemCluesanityBundleSize"]
+                self.options.CutsceneSkip.value = slot_data["CutsceneSkip"]
+                self.options.TrapChance.value = slot_data["TrapChance"]
+                self.options.IcePhysicsTrapWeight.value = slot_data["IcePhysicsTrapWeight"]
+                self.options.SpeedChangeTrapWeight.value = slot_data["SpeedChangeTrapWeight"]
+                self.options.InvisibilityTrapWeight.value = slot_data["InvisibilityTrapWeight"]
+                self.options.BallTrapWeight.value = slot_data["BallTrapWeight"]
 
-                    starting_episode = EpisodeType(self.options.StartingEpisode)
-                    starting_episode_unlock = episode_type_to_unlock[starting_episode]
-                    starting_episode_name = starting_episode_unlock.replace(": Episode Unlock", "")
+                starting_episode = EpisodeType(self.options.StartingEpisode)
+                starting_episode_unlock = episode_type_to_unlock[starting_episode]
+                starting_episode_name = starting_episode_unlock.replace(": Episode Unlock", "")
 
-                    if did_avoid_early_bk(self):
-                        if starting_episode_name == "All":
-                            starting_episode_name = episode_type_to_unlock[EpisodeType(random.randint(1, 4))].replace(
-                                ": Episode Unlock", "")
-                            self.random_episode = starting_episode_name
+                if did_avoid_early_bk(self):
+                    if starting_episode_name == "All":
+                        starting_episode_name = episode_type_to_unlock[EpisodeType(self.random.randint(1, 4))].replace(
+                            ": Episode Unlock", "")
+                        self.random_episode = starting_episode_name
             return
 
         starting_episode = EpisodeType(self.options.StartingEpisode)
@@ -206,7 +205,7 @@ class Sly1World(World):
         # Avoid Early BK
         if did_avoid_early_bk(self):
             if starting_episode_name == "All":
-                starting_episode_name = episode_type_to_unlock[EpisodeType(random.randint(1, 4))].replace(": Episode Unlock", "")
+                starting_episode_name = episode_type_to_unlock[EpisodeType(self.random.randint(1, 4))].replace(": Episode Unlock", "")
                 self.random_episode = starting_episode_name
             self.multiworld.push_precollected(self.create_item(f'{starting_episode_name}: Key'))
 
